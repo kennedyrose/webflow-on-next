@@ -1,4 +1,3 @@
-import axios from 'axios'
 
 export default function Home(props) {
   return (
@@ -9,6 +8,7 @@ export default function Home(props) {
 export async function getStaticProps(ctx) {
   // Import modules in here that aren't needed in the component
   const cheerio = await import(`cheerio`)
+  const axios = (await import(`axios`)).default
 
   // Fetch HTML
   let res = await axios(`https://business-starter-template.webflow.io`)
