@@ -3,6 +3,7 @@ import Link from 'next/link'
 import parseHtml, { domToReact } from 'html-react-parser'
 import get from 'lodash/get'
 
+// Determines if URL is internal or external
 function isUrlInternal(link){
   if(
     !link ||
@@ -16,6 +17,7 @@ function isUrlInternal(link){
   return true
 }
 
+// Replaces DOM nodes with React components
 function replace(node){
   const attribs = node.attribs || {}
 
@@ -37,6 +39,16 @@ function replace(node){
     )
   }
 
+  // Make Google Fonts scripts work
+  if(node.name === `script`){
+    let content = get(node, `children.0.data`, ``)
+    if(content && content.trim().indexOf(`WebFont.load(`) === 0){
+      content = `setTimeout(function(){${content}}, 1)`
+      return (
+        <script {...attribs} dangerouslySetInnerHTML={{__html: content}}></script>
+      )
+    }
+  }
 
 }
 const parseOptions = { replace }
@@ -45,7 +57,7 @@ export default function Home(props) {
   return (
     <>
       <Head>
-        {parseHtml(props.headContent)}
+        {parseHtml(props.headContent, parseOptions)}
       </Head>
       {parseHtml(props.bodyContent, parseOptions)}
     </>
