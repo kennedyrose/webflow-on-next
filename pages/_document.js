@@ -21,7 +21,6 @@ export default class DocumentComponent extends Document {
       const { ...attribs } = $html[0].attribs
       delete attribs[`data-wf-page`]
       htmlAttribs = attribs
-      console.log(`htmlAttribs`, htmlAttribs)
     }
 
     return {
