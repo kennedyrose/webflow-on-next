@@ -4,4 +4,4 @@ This repo is a part of my [Integrating Webflow and Next.js](https://kennedyrose.
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/git/external?repository-url=https%3A%2F%2Fgithub.com%2Fkennedyrose%2Fwebflow-on-next&env=WEBFLOW_URL&envDescription=Your%20Webflow%20URL%20with%20no%20trailing%20slash)
 
-[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/kennedyrose/webflow-on-next#WEBFLOW_URL=https://business-starter-template.webflow.io)
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/kennedyrose/webflow-on-next)
