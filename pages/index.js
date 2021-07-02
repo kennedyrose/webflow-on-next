@@ -2,6 +2,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import parseHtml, { domToReact } from 'html-react-parser'
 import get from 'lodash/get'
+import React from 'react'
 
 // Determines if URL is internal or external
 function isUrlInternal(link){
@@ -23,14 +24,25 @@ function replace(node){
 
   // Replace links with Next links
   if(node.name === `a` && isUrlInternal(attribs.href)){
-    const { href, ...props } = attribs
+    const { href, style, ...props } = attribs
     if(props.class){
       props.className = props.class
       delete props.class
     }
+    if(!style){
+      return (
+        <Link href={href}>
+          <a {...props}>
+            {!!node.children && !!node.children.length &&
+              domToReact(node.children, parseOptions)
+            }
+          </a>
+        </Link>
+      )
+    }
     return (
       <Link href={href}>
-        <a {...props}>
+        <a {...props} href={href} css={style}>
           {!!node.children && !!node.children.length &&
             domToReact(node.children, parseOptions)
           }
@@ -38,6 +50,7 @@ function replace(node){
       </Link>
     )
   }
+
 
   // Make Google Fonts scripts work
   if(node.name === `script`){
@@ -85,8 +98,11 @@ export async function getStaticProps(ctx) {
     })
   const html = res.data
 
+
   // Parse HTML with Cheerio
   const $ = cheerio.load(html)
+
+  // Convert back to HTML strings
   const bodyContent = $(`body`).html()
   const headContent = $(`head`).html()
 
