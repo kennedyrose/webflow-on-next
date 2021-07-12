@@ -2,7 +2,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import parseHtml, { domToReact } from 'html-react-parser'
 import get from 'lodash/get'
-import React from 'react'
+import React, { useEffect } from 'react'
 
 // Determines if URL is internal or external
 function isUrlInternal(link){
@@ -16,6 +16,24 @@ function isUrlInternal(link){
     return false
   }
   return true
+}
+
+function Script(props){
+  const {src, ...scriptProps} = props
+  useEffect(() => {
+    const script = document.createElement('script')
+    for(let key in scriptProps){
+      script[key] = scriptProps[key]
+    }
+    script.async = true
+    console.log(`loading src`, src)
+    script.src = src
+    document.head.appendChild(script)
+    return () => {
+      script.remove()
+    }
+  }, [props])
+  return null
 }
 
 // Replaces DOM nodes with React components
@@ -55,10 +73,22 @@ function replace(node){
   // Make Google Fonts scripts work
   if(node.name === `script`){
     let content = get(node, `children.0.data`, ``)
-    if(content && content.trim().indexOf(`WebFont.load(`) === 0){
-      content = `setTimeout(function(){${content}}, 1)`
+    if(attribs.crossorigin){
+      attribs.crossOrigin = attribs.crossorigin
+      delete attribs.crossorigin
+    }
+    if(content){
+      if(content.trim().indexOf(`WebFont.load(`) === 0){
+        content = `setTimeout(function(){${content}}, 1)`
+        return (
+          <script {...attribs} dangerouslySetInnerHTML={{__html: content}}></script>
+        )
+      }
+    }
+    else{
+      console.log(`src`, attribs.src)
       return (
-        <script {...attribs} dangerouslySetInnerHTML={{__html: content}}></script>
+        <Script {...attribs} />
       )
     }
   }
@@ -66,13 +96,86 @@ function replace(node){
 }
 const parseOptions = { replace }
 
+
+
+
+// Splits HTML and scripts
+// Duplicated from content above, refactor later
+function splitParse(content){
+  const scripts = []
+
+  function replace(node){
+    const attribs = node.attribs || {}
+
+    // Replace links with Next links
+    if(node.name === `a` && isUrlInternal(attribs.href)){
+      const { href, style, ...props } = attribs
+      if(props.class){
+        props.className = props.class
+        delete props.class
+      }
+      if(!style){
+        return (
+          <Link href={href}>
+            <a {...props}>
+              {!!node.children && !!node.children.length &&
+                domToReact(node.children, parseOptions)
+              }
+            </a>
+          </Link>
+        )
+      }
+      return (
+        <Link href={href}>
+          <a {...props} href={href} css={style}>
+            {!!node.children && !!node.children.length &&
+              domToReact(node.children, parseOptions)
+            }
+          </a>
+        </Link>
+      )
+    }
+
+
+    // Make Google Fonts scripts work
+    if(node.name === `script`){
+      let content = get(node, `children.0.data`, ``)
+      if(attribs.crossorigin){
+        attribs.crossOrigin = attribs.crossorigin
+        delete attribs.crossorigin
+      }
+      if(content){
+        if(content.trim().indexOf(`WebFont.load(`) === 0){
+          content = `setTimeout(function(){${content}}, 1)`
+          return (
+            <script {...attribs} dangerouslySetInnerHTML={{__html: content}}></script>
+          )
+        }
+      }
+      else{
+        console.log(`src`, attribs.src)
+        scripts.push(
+          <Script {...attribs} key={scripts.length} />
+        )
+        return null
+      }
+    }
+
+  }
+  const parseOptions = { replace }
+  const html = parseHtml(content, parseOptions)
+  return { scripts, html }
+}
+
 export default function Home(props) {
+  const { scripts, html } = splitParse(props.headContent)
   return (
     <>
       <Head>
-        {parseHtml(props.headContent, parseOptions)}
+        {html}
       </Head>
       {parseHtml(props.bodyContent, parseOptions)}
+      {scripts}
     </>
   )
 }
